@@ -13,10 +13,6 @@ output_layers = [layer_names[i - 1] for i in net.getUnconnectedOutLayers()]
 def calculate_cuboid_volume(length, width, height):
     return length * width * height
 
-object_length = 0.1  # Example length
-object_width  = 0.05 # Example width
-object_height = 0.15 # Example height
-
 # Process video frames
 cap = cv2.VideoCapture("./videos/video.mp4")
 
@@ -55,41 +51,33 @@ while True:
                 label = f"{classes[class_id]}: {confidence:.2f}"
                 cv2.putText(frame, label, (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
+                # Calculate actual object dimensions
+                actual_length = w  # Assuming width represents the length of the object
+                actual_width = h   # Assuming height represents the width of the object
+                actual_height = (w + h) / 2  # Assuming height is proportional to the average of width and height
+
+                # Calculate volume based on the object's dimensions and the scale of the video
+                scale_factor = 1.0  # Example scale factor (adjust as needed based on your calibration or reference objects)
+                length_cm = actual_length * scale_factor
+                width_cm = actual_width * scale_factor
+                height_cm = actual_height * scale_factor
+
+                volume = calculate_cuboid_volume(length_cm, width_cm, height_cm)
+                total_volume += volume
+
+
     # Display frame
     cv2.imshow("Object Detection", frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-    # Calculate volume based on the object's dimensions and the scale of the video
-    scale_factor  = 1.0 # Example scale factor (adjust as needed based on your calibration or reference objects)
-    length_pixels = w * scale_factor
-    width_pixels  = h * scale_factor
-    height_pixels = (w + h) / 2 * scale_factor # Assuming height is proportional to the average of width and height
-    # length_meters = length_pixels * object_length / object_width # Convert pixels to meters using known dimensions
-    length_centimeters = length_pixels * 100 * object_length / object_width # Convert pixels to centimeters and meters to centimeters
-    # width_meters  = width_pixels * object_width / object_width   # Convert pixels to meters using known dimensions
-    width_centimeters  = width_pixels * 100 * object_width / object_width     # Convert pixels to centimeters and meters to centimeters
-    # height_meters = height_pixels * object_height / object_width # Convert pixels to meters using known dimensions
-    height_centimeters = height_pixels * 100 * object_height / object_width # Convert pixels to centimeters and meters to centimeters
-    # volume = calculate_cuboid_volume(length_meters, width_meters, height_meters)
-    volume = calculate_cuboid_volume(length_centimeters, width_centimeters, height_centimeters)
-    # total_volume += volume
-    total_volume += volume
-
     # Increment frame count
     frame_count += 1
-
-# close video file
-# cap.release()
-# cv2.destroyAllWindows()
 
 # Calculate average volume
 average_volume = total_volume / frame_count
 
-# print(f"Average volume of the object: {average_volume} cubic meters")
 print(f"Average volume of the object: {average_volume} cubic centimeters")
-
-
 
 # close video file
 cap.release()
